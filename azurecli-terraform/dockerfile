@@ -1,0 +1,36 @@
+# Start with an Ubuntu 22.04 image
+FROM ubuntu:22.04
+
+# (Optional) This ensures correct arch if you're building on Apple Silicon
+# (Docker might auto-detect, but it doesn't hurt to specify in the build)
+# Example: docker buildx build --platform linux/arm64
+
+# Install prerequisites
+RUN apt-get update && apt-get install -y \
+    curl \
+    apt-transport-https \
+    lsb-release \
+    gnupg \
+    unzip
+
+# Install Azure CLI
+RUN curl -sL https://packages.microsoft.com/keys/microsoft.asc | \
+    gpg --dearmor | \
+    tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null \
+ && AZ_REPO=$(lsb_release -cs) \
+ && echo "deb [arch=$(dpkg --print-architecture)] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" \
+    | tee /etc/apt/sources.list.d/azure-cli.list \
+ && apt-get update && apt-get install -y azure-cli \
+ && rm -rf /var/lib/apt/lists/*
+
+# Install Terraform (ARM64 version for Apple Silicon)
+ENV TERRAFORM_VERSION=1.5.0
+RUN curl -fsSL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_arm64.zip -o terraform.zip \
+    && unzip terraform.zip -d /usr/local/bin \
+    && rm terraform.zip
+
+# (Optional) Verify versions
+RUN az version && terraform version
+
+WORKDIR /root
+CMD ["/bin/bash"]

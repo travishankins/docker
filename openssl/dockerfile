@@ -1,0 +1,11 @@
+# Use Alpine Linux for a lightweight image and specify the ARM64 platform
+FROM alpine:latest
+
+# Install OpenSSL
+RUN apk add --no-cache openssl
+
+# Set the working directory to /data
+WORKDIR /data
+
+# Default command opens a shell
+CMD ["sh"]
